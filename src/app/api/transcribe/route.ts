@@ -3,6 +3,7 @@ import fs from "fs";
 import { NextRestApiRoute, RestError } from "_lib/NextRestApiRoute";
 import path from "path";
 import OpenAI from "openai";
+import { simplifyMessage } from 'api/simplify/simplify';
 
 export const POST = async (req: Request) => {
     const body = await req.json();
@@ -20,7 +21,9 @@ export const POST = async (req: Request) => {
             language: "zh"
         });
         console.log("Got transcription: " + transcription.text);
-        return Server.NextResponse.json(transcription);
+        const simplified = await simplifyMessage(transcription.text);
+        console.log("Simplified form : " + simplified);
+        return Server.NextResponse.json({text: simplified});
 
     } catch (e: any) {
         throw new RestError("Failed to transcribe audio: " + e.message, 500);

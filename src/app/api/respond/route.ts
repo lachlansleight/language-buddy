@@ -1,3 +1,4 @@
+import { simplifyMessage } from 'api/simplify/simplify';
 import Server from 'next/server';
 import OpenAI from "openai";
 
@@ -12,11 +13,13 @@ export const POST = async (req: Request) => {
     });
     const responseText = completion.choices[0].message.content || "";
     console.log("Got response: " + responseText);
+    const simplified = await simplifyMessage(responseText);
+    console.log("Simplified form : " + simplified);
 
     const mp3 = await openai.audio.speech.create({
         model: body.hd ? "tts-1-hd" : "tts-1",
         voice: body.voice || "shimmer",
-        input: responseText,
+        input: simplified,
         response_format: "mp3",
         speed: body.speed || 1.0,
     });
@@ -24,5 +27,5 @@ export const POST = async (req: Request) => {
     const audio = buffer.toString("base64");
     console.log("Finished converting message to audio");
 
-    return Server.NextResponse.json({ text: responseText, audio });
+    return Server.NextResponse.json({ text: simplified, audio });
 }

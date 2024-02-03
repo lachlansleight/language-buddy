@@ -1,5 +1,6 @@
 import Server from 'next/server';
 import fs from "fs";
+import os from "os";
 import { NextRestApiRoute, RestError } from "_lib/NextRestApiRoute";
 import path from "path";
 import OpenAI from "openai";
@@ -10,7 +11,8 @@ export const POST = async (req: Request) => {
 
     console.log("Generating audio buffer from upload data");
     const rawAudio = Buffer.from(body.audio, "base64");
-    const outputPath = path.join(process.cwd(), "output.mp3");
+    
+    const outputPath = path.join(os.tmpdir(), "output.mp3");
     fs.writeFileSync(outputPath, rawAudio);
 
     try {

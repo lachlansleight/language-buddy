@@ -1,5 +1,15 @@
 const CopyPlugin = require("copy-webpack-plugin");
 
+const wasmPaths = [
+    "./node_modules/onnxruntime-web/dist/ort-wasm.wasm",
+    "./node_modules/onnxruntime-web/dist/ort-wasm-threaded.wasm",
+    "./node_modules/onnxruntime-web/dist/ort-wasm-simd.wasm",
+    "./node_modules/onnxruntime-web/dist/ort-wasm-simd.jsep.wasm",
+    "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
+    "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm",
+    "./node_modules/onnxruntime-web/dist/ort-training-wasm-simd.wasm",
+];
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
     webpack: (config) => {
@@ -9,92 +19,14 @@ const nextConfig = {
           fs: false,
         };
     
-        //local dev server
+        //local dev server - copy wasm into static/chunks/app
         config.plugins.push(
-          new CopyPlugin({
-            patterns: [
-              {
-                from: "./node_modules/onnxruntime-web/dist/ort-wasm.wasm",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/onnxruntime-web/dist/ort-wasm-threaded.wasm",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd.wasm",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd.jsep.wasm",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/onnxruntime-web/dist/ort-training-wasm-simd.wasm",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/@ricky0123/vad-web/dist/silero_vad.onnx",
-                to: "static/chunks/app",
-              },
-              {
-                from: "./node_modules/@ricky0123/vad-web/dist/vad.worklet.bundle.min.js",
-                to: "static/chunks/app",
-              },
-            ],
-          })
+          new CopyPlugin({ patterns: wasmPaths.map(p => ({from: p, to: "static/chunks/app"})) })
         );
 
-        //vercel
+        //vercel - copy wasm into static/chunks
         config.plugins.push(
-            new CopyPlugin({
-              patterns: [
-                {
-                  from: "./node_modules/onnxruntime-web/dist/ort-wasm.wasm",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/onnxruntime-web/dist/ort-wasm-threaded.wasm",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd.wasm",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd.jsep.wasm",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.wasm",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded.jsep.wasm",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/onnxruntime-web/dist/ort-training-wasm-simd.wasm",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/@ricky0123/vad-web/dist/silero_vad.onnx",
-                  to: "static/chunks",
-                },
-                {
-                  from: "./node_modules/@ricky0123/vad-web/dist/vad.worklet.bundle.min.js",
-                  to: "static/chunks",
-                },
-              ],
-            })
+            new CopyPlugin({ patterns: wasmPaths.map(p => ({from: p, to: "static/chunks"})) })
           );
     
         return config;

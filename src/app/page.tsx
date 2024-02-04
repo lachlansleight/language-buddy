@@ -10,7 +10,6 @@ import UserMessage from "_components/UserMessage";
 import AssistantMessage from "_components/AssistantMessage";
 import EnterWrapper from "_components/EnterWrapper";
 import AudioPlayer from "_components/Base64AudioPlayer";
-import debugConversation from "_lib/debugConversation";
 
 export default function Chat() {
     const [ttsConfig, setTtsConfig] = useState<
@@ -39,7 +38,13 @@ export default function Chat() {
         id: number;
         audio?: string;
     };
-    const [conversation, setConversation] = useState<ChatMessageWithExtras[]>(debugConversation);
+    const [conversation, setConversation] = useState<ChatMessageWithExtras[]>([
+        {
+            id: 0,
+            role: "system",
+            content: "",
+        },
+    ]);
 
     const [currentlyPlayingAudio, setCurrentlyPlayingAudio] = useState(-1);
 
@@ -105,6 +110,10 @@ export default function Chat() {
         };
         doSend();
     };
+
+    useEffect(() => {
+        if(currentlyPlayingAudio !== -1) setRecorderActive(false);
+    }, [currentlyPlayingAudio]);
 
     return (
         <EnterWrapper>
@@ -185,12 +194,6 @@ export default function Chat() {
                     )}
                 />
 
-                {/* <audio src={`data:audio/mp3;base64,${lastAudioBase64}`} autoPlay={true} onPlay={() => {
-                    setRecorderActive(false);
-                }} onEnded={() => {
-                    setRecorderActive(true);
-                }} /> */}
-
                 <div className="flex flex-col gap-4">
                     {conversation
                         .filter(m => m.role !== "system")
@@ -210,7 +213,7 @@ export default function Chat() {
                     {status === "waiting-for-user" && recorderState.listening && (
                         <div className={`flex flex-col gap-2 items-end`}>
                             <p
-                                className={`rounded p-2 ${recorderState.speaking ? "border border-blue-800" : "bg-blue-800"}`}
+                                className={`rounded p-2 ${recorderState.speaking ? "border border-orange-800" : "bg-orange-800"}`}
                             >
                                 {recorderState.speaking ? (
                                     <FaMicrophone className="text-2xl text-red-700" />
@@ -222,7 +225,7 @@ export default function Chat() {
                     )}
                     {status === "transcribing" && (
                         <div className={`flex flex-col gap-2 items-end`}>
-                            <p className={`rounded p-2 bg-blue-800`}>
+                            <p className={`rounded p-2 bg-orange-800`}>
                                 <FaSync className="text-2xl animate-spin" />
                             </p>
                         </div>
@@ -241,8 +244,6 @@ export default function Chat() {
                     isPlaying={!!conversation.find(m => m.id === currentlyPlayingAudio)}
                     onEnded={() => setCurrentlyPlayingAudio(-1)}
                 />
-
-                {/* <pre>{JSON.stringify(conversation, null, 2)}</pre> */}
             </div>
         </EnterWrapper>
     );

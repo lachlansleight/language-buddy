@@ -1,6 +1,6 @@
 {
     "name": "language-buddy",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "author": "@LachlanSleight",
     "scripts": {
         "dev": "next dev -p 3741",

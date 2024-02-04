@@ -1,5 +1,5 @@
-import { simplifyMessage } from 'api/simplify/simplify';
-import Server from 'next/server';
+import { simplifyMessage } from "api/simplify/simplify";
+import Server from "next/server";
 import OpenAI from "openai";
 
 export const POST = async (req: Request) => {
@@ -28,4 +28,4 @@ export const POST = async (req: Request) => {
     console.log("Finished converting message to audio");
 
     return Server.NextResponse.json({ text: simplified, audio });
-}
+};

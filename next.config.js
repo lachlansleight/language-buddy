@@ -12,25 +12,25 @@ const wasmPaths = [
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    webpack: (config) => {
+    webpack: config => {
         config.resolve.fallback = {
-          ...config.resolve.fallback,
-    
-          fs: false,
+            ...config.resolve.fallback,
+
+            fs: false,
         };
-    
+
         //local dev server - copy wasm into static/chunks/app
         config.plugins.push(
-          new CopyPlugin({ patterns: wasmPaths.map(p => ({from: p, to: "static/chunks/app"})) })
+            new CopyPlugin({ patterns: wasmPaths.map(p => ({ from: p, to: "static/chunks/app" })) })
         );
 
         //vercel - copy wasm into static/chunks
         config.plugins.push(
-            new CopyPlugin({ patterns: wasmPaths.map(p => ({from: p, to: "static/chunks"})) })
-          );
-    
+            new CopyPlugin({ patterns: wasmPaths.map(p => ({ from: p, to: "static/chunks" })) })
+        );
+
         return config;
-      },
+    },
 };
 
 module.exports = nextConfig;

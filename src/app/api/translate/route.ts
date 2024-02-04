@@ -1,4 +1,4 @@
-import Server from 'next/server';
+import Server from "next/server";
 import OpenAI from "openai";
 
 const util = require("util");
@@ -12,12 +12,13 @@ export const POST = async (req: Request) => {
         messages: [
             {
                 role: "system",
-                content: "You are a translation assistant, responding with nothing more than the english translation of the provided message"
+                content:
+                    "You are a translation assistant, responding with nothing more than the english translation of the provided message",
             },
             {
                 role: "user",
-                content: message
-            }
+                content: message,
+            },
         ],
         model: "gpt-4-0125-preview",
     });
@@ -25,4 +26,4 @@ export const POST = async (req: Request) => {
     console.log("Translated message: " + responseText);
 
     return Server.NextResponse.json({ text: responseText });
-}
+};

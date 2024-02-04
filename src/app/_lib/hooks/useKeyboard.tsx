@@ -9,6 +9,7 @@ const useKeyboard = (callback: (e: KeyboardEvent) => void, dependencies: Depende
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
         };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [...dependencies, callback]);
 };
 

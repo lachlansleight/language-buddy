@@ -1,4 +1,4 @@
-import Server from 'next/server';
+import Server from "next/server";
 import OpenAI from "openai";
 
 export const simplifyMessage = async (message: string) => {
@@ -7,17 +7,18 @@ export const simplifyMessage = async (message: string) => {
         messages: [
             {
                 role: "system",
-                content: "You convert chinese characters to their simplified forms and respond with the simplified text. Respond with the original message if no simplification is needed. Never add any new information."
+                content:
+                    "You convert chinese characters to their simplified forms and respond with the simplified text. Respond with the original message if no simplification is needed. Never add any new information.",
             },
             {
                 role: "user",
-                content: message
-            }
+                content: message,
+            },
         ],
         model: "gpt-4-0125-preview",
     });
     return completion.choices[0].message.content || "";
-}
+};
 
 export const POST = async (req: Request) => {
     const body = await req.json();
@@ -27,4 +28,4 @@ export const POST = async (req: Request) => {
     console.log("Translated message: " + responseText);
 
     return Server.NextResponse.json({ text: responseText });
-}
+};

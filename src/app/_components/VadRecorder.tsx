@@ -1,21 +1,10 @@
 "use client";
 
 import { useMicVAD } from "@ricky0123/vad-react";
-import * as ort from "onnxruntime-web";
 import { useEffect, useState } from "react";
 import { chunksToMp3 } from "_lib/audioEncode";
 import audioBufferToWav from "audiobuffer-to-wav";
 import axios from "axios";
-
-
-// ort.env.wasm.wasmPaths = {
-//     "ort-training-wasm-simd.wasm": "http://localhost:3741/ort-training-wasm-simd.wasm",
-//     "ort-wasm-simd-threaded.wasm": "http://localhost:3741/ort-wasm-simd-threaded.wasm",
-//     "ort-wasm-simd.wasm": "http://localhost:3741/ort-wasm-simd.wasm",
-//     "ort-wasm-threaded.wasm": "http://localhost:3741/ort-wasm-threaded.wasm",
-//     "ort-wasm.wasm": "http://localhost:3741/ort-wasm.wasm",
-// };
-//ort.env.wasm.wasmPaths = "/hello";
 
 export interface VadRecorderState {
     error?: string;
@@ -30,11 +19,15 @@ const DefaultVadRecorderRender = (state: VadRecorderState): JSX.Element => {
             {state.error && <p className="text-red-300">{state.error}</p>}
             {state.loading && <p>Loading</p>}
             {!state.listening && <p className="text-red-700 font-bold">Inactive</p>}
-            {(state.listening && state.speaking) && <p className="text-green-700 font-bold">Speaking</p> }
-            {(state.listening && !state.speaking) && <p className="text-yellow-700 font-bold">Waiting</p> }
+            {state.listening && state.speaking && (
+                <p className="text-green-700 font-bold">Speaking</p>
+            )}
+            {state.listening && !state.speaking && (
+                <p className="text-yellow-700 font-bold">Waiting</p>
+            )}
         </div>
-    )
-}
+    );
+};
 
 const VadRecorder = ({
     active,
@@ -43,13 +36,12 @@ const VadRecorder = ({
     onGetTranscription,
     render = DefaultVadRecorderRender,
 }: {
-    active: boolean,
-    onStateChange: (newState: VadRecorderState) => void,
-    onBeginTranscription?: () => void,
-    onGetTranscription: (text: string) => void,
-    render?: (state: VadRecorderState) => JSX.Element,
+    active: boolean;
+    onStateChange: (newState: VadRecorderState) => void;
+    onBeginTranscription?: () => void;
+    onGetTranscription: (text: string) => void;
+    render?: (state: VadRecorderState) => JSX.Element;
 }): JSX.Element => {
-
     const [state, setState] = useState<VadRecorderState>({
         loading: false,
         listening: false,
@@ -77,9 +69,9 @@ const VadRecorder = ({
         startOnLoad: false,
         redemptionFrames: 30,
         onSpeechEnd: audio => {
-            setState(cur => ({...cur, speaking: false}));
+            setState(cur => ({ ...cur, speaking: false }));
             const doUpload = async () => {
-                if(onBeginTranscription) onBeginTranscription();
+                if (onBeginTranscription) onBeginTranscription();
                 const audioBuffer = new AudioBuffer({
                     sampleRate: 16000,
                     length: audio.length,
@@ -93,44 +85,44 @@ const VadRecorder = ({
                 const asMp3 = await chunksToMp3([new Blob([asWav])]);
                 const asFile = new File([asMp3], "recording.mp3");
                 const data = await getFileAsBase64(asFile);
-                console.log("Got file as base64", data);
-                const jsonUpload = {audio: data};
-                console.log(jsonUpload);
-                const transcription = (await axios.post("/api/transcribe", jsonUpload, {
-                    headers: {
-                        "Content-Type": "application/json",
-                    }
-                })).data;
+                const jsonUpload = { audio: data };
+                const transcription = (
+                    await axios.post("/api/transcribe", jsonUpload, {
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    })
+                ).data;
                 onGetTranscription(transcription.text);
-            }
+            };
             doUpload();
         },
         onSpeechStart: () => {
-            setState(cur => ({...cur, speaking: true}));
+            setState(cur => ({ ...cur, speaking: true }));
         },
-    });    
+    });
 
     useEffect(() => {
-        if(vad.errored) setState(cur => ({...cur, error: (vad.errored as any).message}))
-        else setState(cur => ({...cur, error: undefined}));
+        if (vad.errored) setState(cur => ({ ...cur, error: (vad.errored as any).message }));
+        else setState(cur => ({ ...cur, error: undefined }));
     }, [vad.errored]);
 
     useEffect(() => {
-        setState(cur => ({...cur, loading: vad.loading}))
+        setState(cur => ({ ...cur, loading: vad.loading }));
     }, [vad.loading]);
 
     useEffect(() => {
-        console.log(active, vad.listening);
-        if(active && !vad.listening) vad.start();
-        else if(!active && vad.listening) vad.pause();
-        setState(cur => ({...cur, listening: vad.listening}));
+        if (active && !vad.listening) vad.start();
+        else if (!active && vad.listening) vad.pause();
+        setState(cur => ({ ...cur, listening: vad.listening }));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [vad.listening, active]);
 
     useEffect(() => {
         onStateChange(state);
-    }, [state]);
+    }, [onStateChange, state]);
 
     return render(state);
-}
+};
 
 export default VadRecorder;

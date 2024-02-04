@@ -15,7 +15,7 @@ const getAnyErrors = async (openai: OpenAI, question: string, response: string) 
     const completion = await openai.chat.completions.create({
         messages: [{ 
             role: "system", 
-            content: "You are a language tutor. I'll give you a chinese question + response pair. If there are any errors in the response, please point them out and correct them as concisely as possible. If there are no errors, simply respond 'no errors'. Your responses must always be in english."
+            content: "You are a polite language tutor. I'll give you a chinese question + response pair. If there are any errors in the response, please point them out and correct them as concisely as possible. If there are no errors, simply respond 'no error'. Your responses must always be in english."
         }, {
             role: "assistant",
             content: question
@@ -37,7 +37,7 @@ export const POST = async (req: Request) => {
         getNaiveResponse(openai, messages),
         getAnyErrors(openai, messages.slice(-2)[0].content as string, messages.slice(-1)[0].content as string)
     ]);
-    const responseText = responses[1] === "no errors" ? responses[0] : responses[1];
+    const responseText = responses[1].toLowerCase().includes("no error") ? responses[0] : responses[1];
     console.log("Got response: " + responseText);
     const simplified = await simplifyMessage(responseText);
     console.log("Simplified form : " + simplified);

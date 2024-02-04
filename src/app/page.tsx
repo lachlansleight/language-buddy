@@ -1,17 +1,21 @@
 "use client";
 
 import axios from "axios";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import VadRecorder, { VadRecorderState } from "_components/VadRecorder";
 import OpenAI from "openai";
 import CompactTextField from "_components/CompactTextAreaField";
-import { FaMicrophone, FaSync } from "react-icons/fa";
+import { FaMicrophone, FaPlay, FaSync } from "react-icons/fa";
 import UserMessage from "_components/UserMessage";
 import AssistantMessage from "_components/AssistantMessage";
 import EnterWrapper from "_components/EnterWrapper";
 import AudioPlayer from "_components/Base64AudioPlayer";
+import HoverableText from "_components/HoverableText";
+import PinyinHoverInfo from "_components/PinyinHoverInfo";
 
 export default function Chat() {
+    const bottomAnchor = useRef<HTMLDivElement>(null);
+
     const [ttsConfig, setTtsConfig] = useState<
         Partial<{
             hd: boolean;
@@ -115,9 +119,17 @@ export default function Chat() {
         if(currentlyPlayingAudio !== -1) setRecorderActive(false);
     }, [currentlyPlayingAudio]);
 
+    useEffect(() => {
+        if(!bottomAnchor.current) return;
+        bottomAnchor.current.scrollIntoView({ behavior: "smooth" });
+    }, [bottomAnchor, conversation, recorderActive]);
+
+    const [hoveredCharacter, setHoveredCharacter] = useState("");
+    const [hoveredPosition, setHoveredPosition] = useState({ x: 0, y: 0 });
+
     return (
         <EnterWrapper>
-            <div className="flex flex-col w-full max-w-md py-8 mx-auto stretch">
+            <div className="flex flex-col">
                 {everStarted ? (
                     <div className={`flex flex-col items-start w-full h-24 my-4`}>
                         <label className="w-24 text-xs italic text-white text-opacity-60">
@@ -147,32 +159,26 @@ export default function Chat() {
                     render={state => (
                         <div className="w-full flex flex-col items-center gap-2">
                             {state.error && <p>Error: {state.error}</p>}
-                            {state.loading && <p>Loading</p>}
-                            {state.listening ? (
-                                <>
-                                    <button
-                                        className="w-72 text-lg bg-yellow-700 rounded p-1"
-                                        onClick={() => setRecorderActive(false)}
-                                    >
-                                        Pause
-                                    </button>
-                                    <p
-                                        className={`${state.speaking ? "text-green-600" : "text-yellow-600"} font-bold`}
-                                    >
-                                        {state.speaking ? "Recording" : "Waiting"}
-                                    </p>
-                                </>
-                            ) : (
-                                <>
-                                    <button
-                                        className="w-72 text-lg bg-green-800 rounded p-1"
-                                        onClick={() => setRecorderActive(true)}
-                                    >
-                                        {everStarted ? "Resume" : "Begin Situation"}
-                                    </button>
-                                    {everStarted && (
+                            {state.loading && (
+                                <div className="grid place-items-center">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <FaSync className="animate-spin text-2xl" />
+                                        <p>Initializing Recorder</p>
+                                    </div>
+                                </div>
+                            )}
+                            {!state.loading && (
+                                <div className="flex justify-between gap-4">
+                                    {!everStarted ? (
                                         <button
-                                            className="w-72 text-lg bg-red-900 rounded p-1"
+                                            className="w-48 text-lg bg-primary-800 rounded p-1"
+                                            onClick={() => setRecorderActive(true)}
+                                        >
+                                            Begin Situation
+                                        </button>
+                                    ) : (
+                                        <button
+                                            className="w-48 text-lg bg-red-900 rounded p-1"
                                             onClick={() => {
                                                 setEverStarted(false);
                                                 setConversation([
@@ -188,18 +194,26 @@ export default function Chat() {
                                             End Situation
                                         </button>
                                     )}
-                                </>
+                                </div>
                             )}
                         </div>
                     )}
                 />
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4 mt-4">
                     {conversation
                         .filter(m => m.role !== "system")
                         .map((m, i) => {
                             return m.role === "user" ? (
-                                <UserMessage key={i} message={m} />
+                                <UserMessage 
+                                    key={i} 
+                                    message={m}
+                                    onCharacterHoverOn={(_, character, position) => {
+                                        setHoveredCharacter(character);
+                                        setHoveredPosition(position);
+                                    }}
+                                    onCharacterHoverOff={() => setHoveredCharacter("")}
+                                />
                             ) : (
                                 <AssistantMessage
                                     key={i}
@@ -207,25 +221,40 @@ export default function Chat() {
                                     audioPlaying={currentlyPlayingAudio === m.id}
                                     onPlay={() => setCurrentlyPlayingAudio(m.id)}
                                     onPause={() => setCurrentlyPlayingAudio(-1)}
+                                    onCharacterHoverOn={(_, character, position) => {
+                                        setHoveredCharacter(character);
+                                        setHoveredPosition(position);
+                                    }}
+                                    onCharacterHoverOff={() => setHoveredCharacter("")}
                                 />
                             );
                         })}
-                    {status === "waiting-for-user" && recorderState.listening && (
-                        <div className={`flex flex-col gap-2 items-end`}>
-                            <p
-                                className={`rounded p-2 ${recorderState.speaking ? "border border-orange-800" : "bg-orange-800"}`}
-                            >
-                                {recorderState.speaking ? (
-                                    <FaMicrophone className="text-2xl text-red-700" />
-                                ) : (
-                                    <FaMicrophone className="text-2xl" />
-                                )}
-                            </p>
-                        </div>
+                    {everStarted && status === "waiting-for-user" && (
+                        <button className={`flex flex-col gap-2 items-end`} onClick={() => {
+                            setRecorderActive(!recorderState.listening);
+                        }}>
+                            {recorderState.listening ? (
+                                <p
+                                    className={`box-border rounded p-2 ${recorderState.speaking ? "bg-red-800" : "border border-red-800"}`}
+                                >
+                                    {recorderState.speaking ? (
+                                        <FaMicrophone className="text-2xl text-white" />
+                                    ) : (
+                                        <FaMicrophone className="text-2xl" />
+                                    )}
+                                </p>
+                            ) : currentlyPlayingAudio === -1 ? (
+                                <p
+                                    className={`rounded p-2 border border-green-800`}
+                                >
+                                    <FaPlay className="text-2xl relative left-0.5" />
+                                </p>
+                            ) : null}
+                        </button>
                     )}
                     {status === "transcribing" && (
                         <div className={`flex flex-col gap-2 items-end`}>
-                            <p className={`rounded p-2 bg-orange-800`}>
+                            <p className={`rounded p-2 bg-primary-800`}>
                                 <FaSync className="text-2xl animate-spin" />
                             </p>
                         </div>
@@ -239,11 +268,18 @@ export default function Chat() {
                     )}
                 </div>
 
+                <div ref={bottomAnchor} />
+
                 <AudioPlayer
                     audioData={conversation.find(m => m.id === currentlyPlayingAudio)?.audio}
                     isPlaying={!!conversation.find(m => m.id === currentlyPlayingAudio)}
-                    onEnded={() => setCurrentlyPlayingAudio(-1)}
+                    onEnded={() => {
+                        setCurrentlyPlayingAudio(-1);
+                        setRecorderActive(true);
+                    }}
                 />
+                
+                <PinyinHoverInfo character={hoveredCharacter} position={hoveredPosition} />
             </div>
         </EnterWrapper>
     );

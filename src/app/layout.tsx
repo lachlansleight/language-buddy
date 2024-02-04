@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <html lang="en">
             <body className={`bg-black text-white ${inter.className}`}>
                 <div className="h-8 flex justify-between items-center px-4 bg-neutral-900">
-                    <div className="flex gap-2 items-center text-orange-400">
+                    <div className="flex gap-2 items-center text-primary-400">
                         <span className="text-2xl"><IoLanguage /></span>
                         <span className="text-sm">LanguageBuddy</span>
                     </div>
@@ -23,7 +23,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                         {packageJson.version}
                     </div>
                 </div>
-                {children}
+                <div className="w-full max-w-md mx-auto stretch px-4 md:px-0 mb-4">
+                    {children}
+                </div>
             </body>
         </html>
     );

@@ -8,7 +8,7 @@ export const simplifyMessage = async (message: string) => {
             {
                 role: "system",
                 content:
-                    "You convert chinese characters to their simplified forms and respond with the simplified text. Respond with the original message if no simplification is needed. Never add any new information. Leave any english in the message unchanged.",
+                    "You return the input message unchanged, except with any traditional chinese characters converted to their simplified forms. If no traditional chinese characters exist in the input message, simply respond \"no changes\"",
             },
             {
                 role: "user",
@@ -17,6 +17,9 @@ export const simplifyMessage = async (message: string) => {
         ],
         model: "gpt-4-0125-preview",
     });
+    if((completion.choices[0].message.content as string).toLowerCase().includes("no changes")) {
+        return message;
+    }
     return completion.choices[0].message.content || "";
 };
 

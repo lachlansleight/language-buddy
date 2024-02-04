@@ -8,7 +8,7 @@ export const simplifyMessage = async (message: string) => {
             {
                 role: "system",
                 content:
-                    "You convert chinese characters to their simplified forms and respond with the simplified text. Respond with the original message if no simplification is needed. Never add any new information.",
+                    "You convert chinese characters to their simplified forms and respond with the simplified text. Respond with the original message if no simplification is needed. Never add any new information. Leave any english in the message unchanged.",
             },
             {
                 role: "user",
